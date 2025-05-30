@@ -1,0 +1,104 @@
+Step 1: Enqueue JavaScript in Theme
+////////////////////////////// Step 1: Enqueue JavaScript in Theme ///////////////////////////////////
+
+function my_enqueue_scripts()
+{
+    wp_enqueue_script('my-ajax-script', get_template_directory_uri() . '/asset/js/my-ajax.js', array
+('jquery'), null, true);
+
+    wp_localize_script('my-ajax-script', 'my_ajax_obj', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('my_nonce')
+    ));
+}
+add_action('wp_enqueue_scripts', 'my_enqueue_scripts');
+
+////////////////////////////// Step 1: Enqueue JavaScript in Theme ///////////////////////////////////
+
+////////////////////////////// Step 2: Create JavaScript (e.g., my-ajax.js) //////////////////////////////
+
+jQuery(document).ready(function($) {
+    $("#my-btn").click(function() {
+        $.ajax({
+            type: "post",
+            // dataType: "text",
+            dataType: "json",
+            url: my_ajax_obj.ajax_url,
+            data: {
+                action: 'my_ajax_action',
+                security: my_ajax_obj.nonce,
+                name: 'John Doe'
+            },
+            success: function(response) {
+                //console.log(response);
+                //$("#result").text(response); // Use response.msg, not 'response.msg'
+                $("#result").text(response.msg); // Use response.msg, not 'response.msg'
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error);
+            }
+        });
+    });
+});
+
+////////////////////////////// Step 2: Create JavaScript (e.g., my-ajax.js) //////////////////////////////
+
+////////////////////////////// Step 3: html code //////////////////////////////
+
+Add a button in your HTML:
+
+<?php
+
+/**
+ * Template Name: Ajax-Wp:1 Page
+ *
+ * @package WordPress
+ * @subpackage Twenty_Fourteen
+ * @since Twenty Fourteen 1.0
+ */
+
+get_header();
+?>
+
+<main class="container my-5">
+    <article class="post-2 page type-page status-publish hentry">
+        <h1 class="mb-4"><?php the_title(); ?></h1>
+        <div class="page-content">
+
+            <button id="my-btn">Click Me!</button>
+            <div class="op" id="result"></div>
+        </div>
+    </article>
+</main>
+
+<?php get_footer(); ?>
+
+////////////////////////////// Step 3: html code //////////////////////////////
+
+ ////////////////////////////// Step 4: Handle AJAX in PHP //////////////////////////////
+
+ 
+add_action('wp_ajax_my_ajax_action', 'first_ajax');
+add_action('wp_ajax_nopriv_my_ajax_action', 'first_ajax');
+
+function first_ajax()
+{
+    //echo "Here you van write Query or anything";
+    // $response = [
+    // 'success' => true,
+    // 'msg' => 'Here you can write Query or anything'
+    // ];
+
+    //wp_send_json($response); // Properly sends JSON
+
+    $name = sanitize_text_field($_POST['name']);
+    wp_send_json([
+        'msg' => "Hello, $name! Your AJAX request was successful."
+    ]);
+
+
+    exit;
+}
+
+
+  ////////////////////////////// Step 4: Handle AJAX in PHP //////////////////////////////
